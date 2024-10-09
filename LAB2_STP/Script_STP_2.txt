@@ -1,0 +1,83 @@
+1. Cấu hình cơ bản trên các thiết bị
+
+Trên R1:
+R1(config)# interface gi0/0/0
+R1(config-if)# ip address 192.168.1.1 255.255.255.0
+R1(config-if)# no shutdown
+
+R1(config)# interface gi0/0/1
+R1(config-if)# no shutdown
+
+
+SW1:
+SW1(config)# interface fa0/1
+SW1(config-if)# switchport mode trunk
+SW1(config-if)# switchport trunk encapsulation dot1q
+SW1(config-if)# no shutdown
+
+SW1(config)# interface fa0/2
+SW1(config-if)# switchport mode trunk
+SW1(config-if)# switchport trunk encapsulation dot1q
+SW1(config-if)# no shutdown
+
+SW1(config)# interface fa0/3
+SW1(config-if)# switchport mode trunk
+SW1(config-if)# switchport trunk encapsulation dot1q
+SW1(config-if)# no shutdown
+
+SW2:
+SW2(config)# interface fa0/1
+SW2(config-if)# switchport mode trunk
+SW2(config-if)# switchport trunk encapsulation dot1q
+SW2(config-if)# no shutdown
+
+SW2(config)# interface fa0/2
+SW2(config-if)# switchport mode access
+SW2(config-if)# switchport access vlan 1
+SW2(config-if)# no shutdown
+
+SW2(config)# interface fa0/3
+SW2(config-if)# switchport mode trunk
+SW2(config-if)# switchport trunk encapsulation dot1q
+SW2(config-if)# no shutdown
+
+SW3:SW3(config)# interface fa0/1
+SW3(config-if)# switchport mode trunk
+SW3(config-if)# switchport trunk encapsulation dot1q
+SW3(config-if)# no shutdown
+
+SW3(config)# interface fa0/2
+SW3(config-if)# switchport mode trunk
+SW3(config-if)# switchport trunk encapsulation dot1q
+SW3(config-if)# no shutdown
+
+
+
+PC1: 
+IP Address: 192.168.1.2
+Subnet Mask: 255.255.255.0
+Default Gateway: 192.168.1.1
+
+
+2. Cấu hình Trunk trên các Switch sử dụng kiểu đóng gói dot1q
+Cấu hình cho tất cả các cổng giữa các switch (cổng e0/1, e0/2, e0/3) sử dụng dot1q.
+
+3. Cấu hình STP cho VLAN 1 với SW1 làm Primary Root Bridge và e0/3 trên SW2 bị khóa
+
+Cấu hình SW1 làm Root Bridge cho VLAN 1:
+SW1(config)# spanning-tree vlan 1 root primary
+
+Cấu hình STP trên SW2 để khóa cổng e0/3:
+Để cổng e0/3 của SW2 rơi vào trạng thái "block" (BLK), cấu hình spanning-tree trên SW1 là root đã làm SW2 nhận biết root, 
+và bản thân STP sẽ tự động đưa e0/3 vào trạng thái block khi có vòng lặp. 
+Để kiểm tra:
+
+SW2# show spanning-tree vlan 1
+
+Nếu cổng fa0/3 không bị khóa,  cấu hình port-priority để giảm ưu tiên của cổng này nhằm đảm bảo nó bị khóa:
+
+SW2(config)# interface fa0/3
+SW2(config-if)# spanning-tree vlan 1 port-priority 128
+
+Khi PC1 ping tới 192.168.1.1 qua fa0/1 của SW2:
+Khi STP hoạt động, và fa0/3 trên SW2 đã bị khóa, lưu lượng từ PC1 đến Router R1 sẽ đi qua fa0/1 của SW2 đến SW1, sau đó đến R1.

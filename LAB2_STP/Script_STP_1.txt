@@ -1,0 +1,160 @@
+1. Cấu hình cơ bản trên các thiết bị
+Trên cả Sw1, Sw2, Sw3:
+Switch(config)# hostname Sw1    (tương tự với Sw2  sw3)
+
+
+2. Cấu hình VLAN
+Sw1:
+
+Sw1(config)# vlan 2
+Sw1(config-vlan)# name LAN2
+Sw1(config-vlan)# exit
+Sw1(config)# vlan 3
+Sw1(config-vlan)# name LAN3
+Sw1(config-vlan)# exit
+Sw1(config)# interface range fa0/5 - 6
+Sw1(config-if-range)# switchport mode access
+Sw1(config-if-range)# switchport access vlan 2
+Sw1(config-if-range)# exit
+Sw1(config)# interface range fa0/7 - 8
+Sw1(config-if-range)# switchport mode access
+Sw1(config-if-range)# switchport access vlan 3
+
+
+Sw2 và Sw3:
+Tạo VLAN 2 và VLAN 3 giống Sw1:
+
+Sw2(config)# vlan 2
+Sw2(config-vlan)# name LAN2
+Sw2(config-vlan)# exit
+Sw2(config)# vlan 3
+Sw2(config-vlan)# name LAN3
+Sw2(config-vlan)# exit
+
+Sw3(config)# vlan 2
+Sw3(config-vlan)# name LAN2
+Sw3(config-vlan)# exit
+Sw3(config)# vlan 3
+Sw3(config-vlan)# name LAN3
+Sw3(config-vlan)# exit
+
+
+3. Cấu hình Trunk giữa các Switch
+
+Sw1:
+Cấu hình cổng trunk Fa0/2 và Fa0/3 kết nối tới Sw2 và Sw3:
+
+Sw1(config)# interface fa0/2
+Sw1(config-if)# switchport mode trunk
+Sw1(config-if)# switchport trunk encapsulation dot1q
+Sw1(config-if)# exit
+Sw1(config)# interface fa0/3
+Sw1(config-if)# switchport mode trunk
+Sw1(config-if)# switchport trunk encapsulation dot1q
+Sw1(config-if)# exit
+
+
+Sw2:
+Cấu hình cổng trunk Fa0/1 và Fa0/3 kết nối tới Sw1 và Sw3:
+
+Sw2(config)# interface fa0/1
+Sw2(config-if)# switchport mode trunk
+Sw2(config-if)# switchport trunk encapsulation dot1q
+Sw2(config-if)# exit
+Sw2(config)# interface fa0/3
+Sw2(config-if)# switchport mode trunk
+Sw2(config-if)# switchport trunk encapsulation dot1q
+Sw2(config-if)# exit
+
+Sw3:
+Cấu hình cổng trunk Fa0/1 và Fa0/2 kết nối tới Sw1 và Sw2:
+
+Sw3(config)# interface fa0/1
+Sw3(config-if)# switchport mode trunk
+Sw3(config-if)# switchport trunk encapsulation dot1q
+Sw3(config-if)# exit
+Sw3(config)# interface fa0/2
+Sw3(config-if)# switchport mode trunk
+Sw3(config-if)# switchport trunk encapsulation dot1q
+Sw3(config-if)# exit
+
+
+4. Cấu hình STP cho VLAN 2 và VLAN 3
+STP VLAN 2:
+Sw2 sẽ là Root Bridge chính cho VLAN 2.
+Sw3 sẽ là Root Bridge phụ cho VLAN 2.
+Cấu hình để cổng Fa0/3 của Sw1 rơi vào trạng thái BLK (block).
+
+Sw2:
+Sw2(config)# spanning-tree vlan 2 root primary
+
+Sw3:
+Sw3(config)# spanning-tree vlan 2 root secondary
+
+Sw1:
+Sw1(config)# interface fa0/3
+Sw1(config-if)# spanning-tree vlan 2 cost 1000   (để đảm bảo cổng Fa0/3 rơi vào trạng thái block)
+
+STP VLAN 3:
+Sw3 sẽ là Root Bridge chính cho VLAN 3.
+Sw2 sẽ là Root Bridge phụ cho VLAN 3.
+Cấu hình để cổng Fa0/2 của Sw1 rơi vào trạng thái BLK.
+
+Sw3:
+Sw3(config)# spanning-tree vlan 3 root primary
+
+Sw2:
+Sw2(config)# spanning-tree vlan 3 root secondary
+
+Sw1:
+Sw1(config)# interface fa0/2
+Sw1(config-if)# spanning-tree vlan 3 cost 1000   (để đảm bảo cổng Fa0/2 rơi vào trạng thái block)
+
+5. Kiểm tra trạng thái STP và thời gian hội tụ
+Để kiểm tra trạng thái STP và thời gian hội tụ, trên từng Switch:
+
+Sw1# show spanning-tree vlan 2
+Sw1# show spanning-tree vlan 3
+
+6. Cấu hình địa chỉ IP cho các VLAN trên các Switch
+
+Sw1:
+Địa chỉ IP cho VLAN 1: 192.168.1.1/24
+
+Sw1(config)# interface vlan 1
+Sw1(config-if)# ip address 192.168.1.1 255.255.255.0
+Sw1(config-if)# no shutdown
+Sw1(config-if)# exit
+
+Sw2:
+Địa chỉ IP cho VLAN 1: 192.168.1.2/24
+Địa chỉ IP cho VLAN 2: 192.168.2.2/24
+
+Sw2(config)# interface vlan 1
+Sw2(config-if)# ip address 192.168.1.2 255.255.255.0
+Sw2(config-if)# no shutdown
+Sw2(config-if)# exit
+Sw2(config)# interface vlan 2
+Sw2(config-if)# ip address 192.168.2.2 255.255.255.0
+Sw2(config-if)# no shutdown
+Sw2(config-if)# exit
+
+
+Sw3:
+Địa chỉ IP cho VLAN 1: 192.168.1.3/24
+Địa chỉ IP cho VLAN 3: 192.168.3.3/24
+
+Sw3(config)# interface vlan 1
+Sw3(config-if)# ip address 192.168.1.3 255.255.255.0
+Sw3(config-if)# no shutdown
+Sw3(config-if)# exit
+Sw3(config)# interface vlan 3
+Sw3(config-if)# ip address 192.168.3.3 255.255.255.0
+Sw3(config-if)# no shutdown
+Sw3(config-if)# exit
+
+Kiểm thử:
+show spanning-tree vlan1
+show vlan1 (vlan2 , vlan3)
+trên các PC thực hiện lệnh ping
+
