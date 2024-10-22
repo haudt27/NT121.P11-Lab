@@ -1,0 +1,75 @@
+1. Yêu cầu 1: Cấu hình cơ bản trên các thiết bị. 
+- Trên R1:
+Router(config)# hostname R1
+R1(config)# banner motd # Hello World! We are Nhom01 #
+
+- Trên Sw1:
+Switch(config)# hostname Sw1
+Sw1(config)# banner motd # Hello World! We are Nhom01 # 
+Sw1(config)#int vlan 1
+Sw1(config-if)#ip address 192.168.1.2 255.255.255.0
+
+2. Yêu cầu 2 – VLAN: 
+a. Tạo VLAN 2 trên Sw1, đặt tên cho VLAN 2 là PhongKinhDoanh, gom các port f0/1 tới f0/2 vào VLAN 2. 
+Sw1(config)#vlan 2
+Sw1 (config-vlan) #name PhongKinhDoanh
+Sw1 (config-vlan)#exit
+Sw1 (config)#int range f0/1-2
+Sw1 (config-if-range)#switchport mode access
+Sw1(config-if-range) #switchport access vlan 2
+
+b. Tạo VLAN 3trên Sw1, đặt trên cho VLAN 3 là PhongKeToan, gom các port f0/3 tới f0/4 vào VLAN 3. 
+Sw1 (config)#vlan 3
+Sw1 (config-vlan)#name PhongKeToan
+Sw1 (config-vlan)#exit
+Swl (config)#int range f0/3-4
+Sw1 (config-if-range)#switchport mode access
+Sw1(config-if-range) #switchport access vlan 3
+ 
+Kiểm tra lại với lệnh: Sw1#show vlan brief:
+ 
+
+3. Yêu cầu 3 – Trunk: Trên Sw1, cấu hình f0/5 thành đường trunk sử dụng kiểu đóng gói dot1q. 
+- Cấu hình trunk cho interface f0/5 trên Sw1:
+Sw1 (config)#int f0/5
+Sw1 (config-if)#switchport mode trunk
+
+4. Yêu cầu 4 – InterVLAN: Trên R1 tạo các sub-interface rồi liên kết các sub-interface vào VLAN tương ứng. 
+- Trên R1 tạo các sub-interface rồi liên kết các sub-interface vào VLAN tương ứng:
+R1(config)#int f0/0
+R1(config-if)#no shut
+R1(config-if)#int f0/0.1
+R1(config-subif)#no shut
+R1(config-subif)#encapsulation dotiq 1
+R1(config-subif)#ip address 192.168.1.1 255.255.255.0
+R1(config-subif)#exit 
+
+R1(config)#int f0/0.2
+R1(config-subif)#no shut
+R1(config-subif)#encapsulation dotiq 2
+R1(config-subif)#ip address 192.168.2.1 255.255.255.0
+R1(config-subif)#exit
+
+R1(config)#int f0/0.3
+R1(config-subif)#no shut
+R1(config-subif)#encapsulation dot1q 3
+R1(config-subif)#ip address 192.168.3.1 255.255.255.0
+R1(config-subif)#exit
+
+5. Yêu cầu 5 – DHCP: 
+a. Cấu hình DHCP Server trên R1 cấp IP xuống cho các PC và thiết bị thuộc mạng VLAN 2 dải IP thuộc lớp mạng 192.168.2.0/24. 
+- Trên R1, cấu hình DHCP pool để cấp IP cho các PC thuộc VLAN2:
+R1(config)#ip dhcp pool VLAN2
+R1 (dhcp-config)#network 192.168.2.0 255.255.255.0
+R1 (dhcp-config) #default-router 192.168.2.1
+→ Kiểm tra trên PC1 đã được cấp thành công địa chỉ IP:
+ 
+
+b. Cấu hình DHCP Server trên R1 cấp IP xuống cho các PC và thiết bị thuộc mạng VLAN 3 dải IP thuộc lớp mạng 192.168.3.0/24.
+- Trên R1, cấu hình DHCP pool để cấp IP cho các PC thuộc VLAN3:
+R1(config)#ip dhcp pool VLAN3
+R1 (dhcp-config)#network 192.168.3.0 255.255.255.0
+R1 (dhcp-config) #default-router 192.168.3.1
+→ Kiểm tra trên PC2 đã được cấp thành công địa chỉ IP:
+ 
+

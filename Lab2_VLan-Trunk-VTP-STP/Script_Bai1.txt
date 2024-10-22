@@ -1,0 +1,192 @@
+ Yêu cầu 1.0: Thực hiện cấu hình cơ bản trên các thiết bị theo bảng:
++ Trên cả Sw1, Sw2, Sw3, R1, R2: 
+Switch(config)# hostname Sw1 (tương tự với Sw2, Sw3, R1, R2)
+Sw1(config)# banner motd # Hello world! We are Nhom01 # (tương tự)
+
++ Trên Sw1: cấu hình vlan 1 và thực hiện cấu hình trunk trên các interface
+Sw1(config)#int vlan 1
+Sw1(config-if)#ip address 192.168.1.251 255.255.255.0
+Sw1(config-if)#no shut
+
+Sw1(config)#int fa0/1
+Sw1(config-if)#switchport mode trunk
+Sw1(config-if)#no shut
+
+Sw1(config)#int fa0/2
+Sw1(config-if)#switchport mode trunk
+Sw1(config-if)#no shut
+
+Sw1(config)#int fa0/3
+Sw1(config-if)#switchport mode trunk
+Sw1(config-if)#no shut
+
+Sw1(config)#int fa0/4
+Sw1(config-if)#switchport mode trunk
+Sw1(config-if)#no shut
+
++ Trên Sw2: Cấu hình vlan 1 và thực hiện cấu hình trunk trên các interface
+Sw2(config)#int vlan 1
+Sw2(config-if)#ip address 192.168.1.252 255.255.255.0
+Sw2(config-if)#no shut
+
+Sw2(config)#int fa0/1
+Sw2(config-if)#switchport mode trunk
+Sw2(config-if)#no shut
+
+Sw2(config)#int fa0/2
+Sw2(config-if)#switchport mode trunk
+Sw2(config-if)#no shut
+
+Sw2(config)#int fa0/3
+Sw2(config-if)#switchport mode trunk
+Sw2(config-if)#no shut
+
+Sw2(config)#int fa0/4
+Sw2(config-if)#switchport mode trunk
+Sw2(config-if)#no shut
+ 
+Sw2(config)#int fa0/5
+Sw2(config-if)#switchport mode trunk
+Sw2(config-if)#no shut
+
++ Trên Sw3: cấu hình vlan 1 và thực hiện cấu hình trunk trên các interface
+Sw3(config)#int vlan 1
+Sw3(config-if)#ip address 192.168.1.253 255.255.255.0
+Sw3(config-if)#no shut
+
+Sw3(config)#int fa0/3
+Sw3(config-if)#switchport mode trunk
+Sw3(config-if)#no shut
+
+Sw3(config)#int fa0/4
+Sw3(config-if)#switchport mode trunk
+Sw3(config-if)#no shut
+
++ Trên Sw4: cấu hình vlan 1 và thực hiện cấu hình trunk trên các interface
+Sw4(config)#int vlan 1
+Sw4(config-if)#ip address 192.168.1.254 255.255.255.0
+Sw4(config-if)#no shut 
+
+Sw4(config)#int fa0/3
+Sw4(config-if)#switchport mode trunk
+Sw4(config-if)#no shut
+
+Sw4(config)#int fa0/4
+Sw4(config-if)#switchport mode trunk
+Sw4(config-if)#no shut
+ 
+
++ Trên R1: cấu hình các interface, sub-interface
+R1(config)#int fa0/0 (để on các sub-int thì cần on int)
+R1(config-if)#no shut
+R1(config)#int fa0/0.1
+R1(config-subif) #encapsulation dot1q 1
+R1(config-subif)#ip address 192.168.1.1 255.255.255.0
+R1(config-subif)#exit
+R1(config)#int fa0/0.2
+R1(config-subif)#no shut
+R1(config-subif)#encapsulation dot1q 2
+R1(config-subif)#ip address 192.168.2.1 255.255.255.0
+R1(config)#int fa0/1
+R1(config-if)#no shut
+R1(config-if)#ip address 172.16.12.1 255.255.255.0
+
+  
++ Trên R2:cấu hình các interface và loopback
+R2(config)#int fa0/0
+R2(config-if)#no shut
+R2(config-if)#ip address 172.16.12.2 255.255.255.0
+R2(config)int loopback 0
+R2(config-if)#no shut
+R2(config-if)#ip address 230.162.1.1 255.255.255.0
+
+
+
+Yêu cầu 1.1: Cấu hình VTPv2 trên các switch tham gia vào VTP domain cisco.com, VTP password cisco với Sw1, Sw2 hoạt động ở mode VTP Server; Sw3, Sw4 hoạt động ở mode VTP Client. Tại Sw2, khởi tạo Vlan2 và đảm bảo các switch còn lại học được Vlan 2.
+- Cấu VTPv2 trên các switch tham gia vào VTP domain cisco.com, VTP password cisco
++ Sw1, Sw2:
+Sw1(config)#vtp domain cisco.com
+Sw1(config)#vtp version 2
+Swl(config)#vtp mode server
+Sw1(config)#vtp password cisco
+
++ Sw3, Sw4:
+Sw3(config)#vtp domain cisco.com
+Sw3(config)#vtp version 2
+Sw3(config)#vtp mode client
+Sw3(config)#vtp password cisco
+
+ 
+- Khởi tạo vlan 2 trên Sw2:
+Sw2(config)#vlan 2
+
+- Vì đã cấu hình mode trunk trên tất cả switch, nên sau khi khởi tại vlan 2 thì vlan 2 đã được active trên các switch. Tiến hành kiểm tra trên các Sw1, Sw2, Sw4# show vlan
+  
+
+Yêu cầu 1.2: Thiết lập STP trên các switch, đảm bảo Sw2 làm root, Sw1làm secondary root, f0/3 trên Sw3 bị khóa, f0/3 trên Sw4 bị khóa.
+ Note: Khi SW2 không hoạt động thì đưa Sw1 làm Root-SW mà không cần chờ đợi việc bầu chọn.
++ Trên Sw2 – Root Bridge:
+Sw2(config)#spanning-tree vlan 2 root primary
+
++ Trên Sw1 – Secondary Root Bridge:
+Swl(config)#spanning-tree vlan 2 root secondary
+
++ Trên Sw3, Sw4 – f0/3 ở trạng thái “BLK”: ban đầu, khi kiểm tra bằng lệnh show spanning-tree vlan 2, f0/3 đã ở trạng thái BLK. Tuy nhiên, để đảm bảo chắc chắn hơn nữa sẽ cấu hình cổng f0/3 trên switch để có chi phí đường đi là 1000 cho VLAN 2.
+
+Sw3(config)#int fa0/3 
+Sw3(config-if)#spanning-tree vlan 2 cost 1000
+ 
+Sw3#show spanning-tree vlan 2
+
+
+Yêu cầu 1.3: Cấu hình định tuyến static route đảm bảo mạng hội tụ, loopback của R2 có thể giao tiếp được với các user thuộc Vlan 1 & 2.
+- Cấu hình định tuyến từ R1 đến interface loopback của R2:
+R1(config)#ip route 203.162.1.0 255.255.255.0 172.16.12.2
+→ Thực hiện kiểm tra kết nối thấy ping đến interface loopback của R2 thành công:
+R1#ping 203.162.1.1
+
+- Cấu hình định tuyến từ R2 đến các user thuộc Vlan 1 & 2 của R1:
+R2 (config)#ip route 192.168.1.0 255.255.255.0 172.16.12.1
+R2 (config)#ip route 192.168.2.0 255.255.255.0 172.16.12.1
+→ Thực hiện kiểm tra kết nối thấy ping các user thuộc Vlan 1 & 2 của R1 thành công:
+R2#ping 192.168.1.1
+R2#ping 192.168.2.1
+
+
+Yêu cầu 1.4: Cấu hình để R2 làm DHCP Server, R1 làm Relay Agent cấp địa chỉ động cho các PC thuộc Vlan 1 & 2.
+- Cấu hình để R2 làm DHCP Server:
+R2(config)#ip dhcp pool VLAN1
+R2(dhcp-config) #network 192.168.1.0 255.255.255.0
+R2(dhcp-config) #default-router 192.168.1.1
+R2(dhcp-config)#exit
+R2(config)#ip dhcp pool VLAN2
+R2(dhcp-config)#network 192.168.2.0 255.255.255.0
+R2(dhcp-config) #default-router 192.168.2.1
+R2(dhcp-config)#exit 
+
+- R1 làm Relay Agent cấp địa chỉ động cho các PC thuộc Vlan 1 & 2: Tiến hành cấu ip helper-address 172.16.12.2 cho các sub-interface, nó sẽ giúp chuyển tiếp gói tin DHCP broadcast từ các PC thuộc Vlan 1 & 2 đến R2 để R2 cấp địa chỉ cho chúng.
+R1 (config)#int fa0/0.1
+R1 (config-subif)#ip helper-address 172.16.12.2
+R1 (config-subif)#exit
+R1 (config)#int fa0/0.2
+R1 (config-subif)#ip helper-address 172.16.12.2
+
+- Tiến hành thêm 2 PC: PC1 và PC2 được nối với Sw2, fa0/6 nối với PC1 thuộc Vlan1, fa07 nối với PC2 thuộc Vlan2
+Sw2 (config)#vlan 2
+Sw2 (config-vlan)#int fa0/7
+Sw2 (config-if)#switchport mode access
+Sw2 (config-if)#switchport access vlan 2
+Sw2 (config-if)#int fa0/6
+Sw2 (config-if)#switchport mode access
+Sw2 (config-if)#switchport access vlan 1
+→ Kiểm tra lại IP tại PC1 và PC2
++ PC1: 192.168.1.2
++ PC2: 192.168.2.2
+ 
+
+Yêu cầu 1.5: Cấu hình đảm bảo các user thuộc Vlan1 có thể giao tiếp được với các user thuộc Vlan 2
+- Để các user thuộc Vlan1 có thể giao tiếp được với các user thuộc Vlan 2 thì cần đảm bảo cấu hình các sub-interface tại R1 (đã cấu hình trước đó tại yêu cầu 1.0):
+- Tiến hành kiểm tra lại giữa PC1 và PC2:
++ PC1: ping 192.168.2.2
++ PC2: ping 192.168.1.2
+ 
